@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>Project 2</title>
+        <!-- Bootstrap core CSS -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/theme.css" rel="stylesheet">
+        <link href="css/bootstrap-reset.css" rel="stylesheet">       
+        <!-- Custom styles for this template -->
+        <link href="css/style.css" rel="stylesheet">
+        <link href="css/style-responsive.css" rel="stylesheet" />           
+    </head>
+
+    <body>
+        <!--header start-->
+        <header class="header-frontend">
+            <div class="navbar navbar-default navbar-fixed-top" style="background-color: #d3e9f7">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="index.html">CSE 5694 - Robotics & AI - <span>Project 2</span></a>
+                    </div>
+                    <div class="navbar-collapse collapse ">
+                        <ul class="nav navbar-nav">
+                            <li><a href="index.html">Home</a></li>
+                            <li><a href="boofcv.html">BoofCV</a></li>                        
+                            <li class="active"><a href="algorithm.html">Algorithm</a></li> 
+                            <li><a href="example.html">Example</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!--header end-->  
+
+        <!--container start-->
+        <div class="container" style="padding-top: 4%">
+            <div class="row">
+                <!--feature start-->
+                <div class="col-sm-5">
+                    <img  src="img/FIT-Logo.jpg">
+                </div>
+                <div class="text-right feature-head col-sm-7">
+                    <h3>Term: Spring 2017<br><br>
+                        Instructor: Marius C. Silaghi <br><br>
+                        Team Members: Roger Ballard, Zubin Kadva, Zongqiao Liu</h3>                    
+                </div>  
+            </div>
+        </div>
+
+        <div class="container" style="padding-bottom: 5%">
+            <div class="row">
+
+                <div class="feature-head "><h1>A SIMPLIFICATION OF THE PROBLEM</h1>
+                    <p>
+                        Rather than finding the stick, we can focus on the more simple task of finding a single pink blob. When we have found all three of the blobs on the stick, we can completely describe the stick's position and orientation on the table.
+                    </p>
+
+                    <h1>THE NAIVE SOLUTION</h1>
+                    <p>
+                        Ideally, we would discretize the configuration space to get a set of actions, evaluate each action, see which one gives us the maximum expected utility, and take that one. The problem with this approach is that the configuration space is far too large to discretize in this manner. If we use three options for each joint, meaning that we can only move in units of about 60° - 120°, depending on the joint. This is clearly nowhere near the level of granularity needed to perform an effective search, but already there are a total of <b>3<sup>5</sup> = 243</b>  possible actions to examine. If we break it down further so that we can move in units of 10°, (which is still rather large) there are a total of <b>18<sup>5</sup> = 1,889,568 </b>possible actions to search. Now consider the fact that for each action, you must compute its effect on each possible state. If we discretize the positions that the target can be in into <b>1 cm * 1 cm squares</b>, there are <b>100 * 100 = 10,000 </b>states to consider. Putting these together leads to a total of <b>188,956,800,000</b> combinations. The amount of computation required for even a rough naive discretization gets out of hand rather quickly, and we haven't even considered the fact that we need to take random samples of evidence if we want to judge the effect an action is going to have.
+                    </p>
+
+                    <h1>ANOTHER WAY OF VIEWING THE PROBLEM</h1>
+                    <p>
+                        Clearly, we can't just uniformly discretize our configuration space and expect any kind of performant system. We need to look at the problem a different way. Rather than trying all possible solutions, let's start with a very coarse discretization of our space, where one possible action could cover a relatively large chunk of the configuration space. We can look at these coarse actions and see which ones are the most promising. Because we only choose some of the possible actions as we go forward in our algorithm, we can afford to examine them more closely. And among these refined actions, we can again pick the most promising and do further refinement on them. This method is a kind of beam search on the action space, and allows to search action spaces with very high effective granularity at a much lower cost than the naive method.
+                    </p>
+
+                    <h1>A LITTLE MORE FORMALLY</h1>
+                    <p>
+                        Consider a hypercube in the configuration space. (Or action space, whichever you prefer. They are equivalent for the purposes of this discussion.) This hypercube represents the set of all actions that fall within this region of the configuration space. From here on I will call these hypercubes "acting regions." Let us define the utility of an acting region to be the maximum utility of any action contained within it.
+                    </p>
+                    <p>
+                        As an aside, we should formally define what utility means to us in this problem. I took utility to be the weighted standard deviation of the belief states. This intuitively makes sense, because when we have a lot of information about where the object is, all of our belief will be centered in one local area, and vice versa.
+                    </p>
+                    <p>
+                        Now, consider the utility function over the action space. The utility function is locally smooth. That is to say, a small change in configuration gives you a small change in the amount of information you gain from taking a picture in that configuration. This allows us to approximate the utility of an acting region by simply evaluating the utility of the action in the middle of it. If we want a better approximation, we can break the acting region down into smaller regions and evaluate them with the same approximation. In fact, we can selectively break down certain subregions more than others when we believe that they are more likely to contain the maximum-utility action. This process of incrementally refining approximations of the values of acting regions and the location of the maximum-utility action inside an acting region was actually my starting point in coming up with this algorithm.
+                    </p>            
+
+                    <h1>A BEAM SEARCH NOTE</h1>
+                    <p>
+                        When I was initially developing this algorithm and preliminarily looking at its complexity, I was having issues with the computational costs growing too high due to the high branching factor of the search. One way of thinking about beam search is as follows: you have some number of nodes <i>w</i> (for beam <b>W</b>idth) that you are currently examining. You evaluate every child of every node,  pick the top <i>w</i> nodes, and continue on one level deeper. In going from one layer to the next, you have to examine <i>b (<b>B</b>ranching factor) * w</i> total new nodes, in order to pick the top <i>w</i>. This means that you are evaluating <i>(b - 1) * w</i> nodes at each layer that never even properly become part of your beam. So, if you are searching to a depth <i>sd</i>, (<b>S</b>earch <b>D</b>epth) you "waste" the amount of time it takes you to evaluate the <i>~ (b - 1) * w * sd </i>nodes you throw out.
+                    </p>
+                    <p>
+                        Now, let's say you're searching through a multidimensional space. (Like, say, our five-dimensional configuration space.) One obvious approach is to split on every dimension at the same time. Unfortunately, this leads to a very large effective branching factor. (In these discussions b denotes the branching factor per dimension, not the total branching factor.) With a <i>b of 3</i> and a <i>d</i> (<b>D</b>imensionality) <i>of 5</i>, you end up with an effective branching factor of 243. Having such a high coefficient in there really hurts, especially when it's raised to a 2nd or 3rd power. (as happens when you start trying to plan multiple actions into the future.)
+                    </p>
+                    <p>
+                        My solution to this problem was to branch on only one dimension at a time. This decreases my search's effective branching factor, at the cost of increasing my effective search depth. Because of the way dimensionality interacts with the branching, however, this is well-worth it. Now, instead of examining a total of <i>b <sup>d</sup> * w</i> nodes per search layer, I'm only examining <i>(b * d) * w </i>nodes per search layer. With a branching factor of 3 and a dimensionality of 5, this drops a constant down from 243 to 15, greatly speeding up the search. (And this kind of search is right on the borderline of feasible, so this is very much needed.)
+                    </p>
+                    <p>
+                        Examining only one dimension at a time does cause its own issues. As you search, you are making decisions with less information, which could lead your beam down suboptimal paths. I fought this effect by increasing my beam width, thereby allowing me to explore more potential branches which would have been prematurely pruned otherwise. I think that this tradeoff is worth it, and I was very happy with my results, but more would need to be done for anything rigorous to be said on the matter.
+                    </p>
+
+                    <h1>ON THE EFFECTIVENESS OF THE ALGORITHM</h1>
+                    <p>
+                        For some context on the effectiveness of this method: I was able to get an effective granularity of 243 in each dimension (breaking each dimension down into 243 discrete options), equivalent to the naive method examining <b>243<sup>5</sup> = 847,288,609,443</b> actions. That's complete freedom to pick any valid point in the configuration space to take a picture from, to within roughly a degree of accuracy on each joint. This is done at the cost of examining 7,500 potential actions per choice point.
+                    </p>
+
+                    <h1>ALGORITHM OVERVIEW</h1>
+                    <p>
+                        So, now we know how to choose which actions to take: start with an acting region covering the entire valid configuration space, and keep refining with beam search until we get to a desired granularity level. But this raises the question: how do we evaluate the utility of an action? Let's start by considering the simple case, where we're only looking one timestep into the future. We can decide on some number of Evidence samples, <b>e</b>, to use to evaluate the expected result of an action <b>e</b> times, we take a sample from our belief state, simulate what we would see if that were the true state, and evaluate the effect it has on our utility. When looking multiple timesteps into the future, this actually involves recursively calling our evaluation function for each sample piece of evidence we generate for each action we evaluate. The matter of simulating the effects of this evidence on the current belief state is an interesting matter in and of itself, but is outside the scope of this page. If you are interested, I recommend taking a look through the code. The <code>PlannerTest</code> class in the tests package is a good place to start; it basically runs a simulation of the robot finding a single point on the table.
+                    </p>
+
+                    <h1>WHY I CHOSE 3 FOR THE BRANCHING FACTOR</h1>
+                    <p>
+                        With the tradeoffs I had to consider, I wanted to prefer search width over search depth. (Note that in this case, a wide, shallow search and a deep, tight search end up with basically the same leaf nodes, just with different costs and a different number of chances for errors.) A branching factor of 1 made no sense, as no actual searching would ever get done. A binary search seems promising at first glance, but then you realize that the parents are not present in the list of their children, and you have to either add in some way of holding on to old nodes or deal with the fact that you would immediately lose all solutions you found, and would have to hope for the best with the children. So, on a practical and theoretical level, 3 seemed to be the best choice for me. It provided a neat way to save answers as the beam progressed, and was small enough to not force me to have to push down my other parameters.
+                    </p>
+
+                    <h1>BELIEF STATE REPRESENTATION</h1>
+                    <p>
+                        The search area was discretized into <i>1 cm * 1 cm</i> squares. Each square was assigned a probability of containing the target object. As pictures are taken, this belief state evolves based on the evidence, causing different searching actions to be taken.
+                    </p>
+                    <p>
+                        Because the algorithm was really designed to find points, the solution had to be broken down into three stages. In the first stage, the belief state is uniformly initialized (except for regions containing the robot base or open air) and any point is found. Once that point is found, the belief state is re-initialized to be a Gaussian ring around the first point, of radius equal to the distance between two blobs on the stick. (Because we know that a second blob exists somewhere in that ring around the first blob, no matter which blob of the stick we found.) Once the second point is found, the belief state is initialized one final time with two possible regions that the final blob could be in. (Informally, we either found the two leftmost blobs or the two rightmost blobs.) Once all the blobs are found, we have enough information to fully characterize the stick.
+                    </p>
+
+                    <h1>inputs</h1>
+                    <p>The current probability distribution for the location of the target.</p>
+                    <p>Beam width.</p>
+                    <p>Beam search branching factor, per dimension. (This should be odd, so that when the parent range is split, the center of the parent range is the center of one of the child ranges.)</p>
+                    <p>Maximum beam search depth. (Controls the granularity of examined actions. The search granularity is </p>
+                    <p style="text-align: center"><i>branching factor<sup> search depth</sup></i></p>
+                    <p># of time steps to look ahead when planning.</p>
+                    <p># of evidence samples to take and average when determining the effect of evidence in a certain belief state.</p>   
+
+                    <h1>analysis</h1>
+                    <h3>Variable definitions:</h3><br><p>t = # of timestamps to look ahead</p>
+                    <p>w = beam width</p>
+                    <p>sd = beam search depth (# of times to split on all dimensions, not # of times to split on a single dimension)</p>
+                    <p>b = branching factor (for the beam search of the possible actions part)</p>
+                    <p>d = dimensionality of the search space</p>
+                    <p>e = # of evidence samples to take for each action</p>
+                    <p>s = # of possible states</p><br>
+
+                    <h3>General complexity:</h3><br>             
+                    <p>T(t, w, sd, d, b, e, s) = s * (w * sd * d * b * e)<sup> t</sup></p><br>
+
+                    <h3>Adding in some specifics about this particular problem:</h3><br>
+                    <p>d = 5,  b = 3</p><br>
+
+                    <h3>Somewhat more specific complexity:</h3><br>
+                    <p>T(t, w, sd, d, b, e, s) = s * (15 * w * sd * e)<sup> t</sup></p><br>
+
+                    <h3>My selection of parameters for this demo:</h3><br>
+                    <p>s = 10,000 (Discretizing the state space into 1cm * 1cm squares.)</p>
+                    <p>w = 100 (Plenty high enough to allow for a reasonable beam that is likely to find a near-optimal action.)</p>
+                    <p>sd = 5 (Breaks most of the joints down into increments of less than a degree. Because of the granularity of the state space, increasing this much more would have just increased the cost without noticeable improvement.)</p>
+                    <p>e = 10 (Enough to provide reasonable estimates of utility.)</p>
+                    <p>t = 1 (Originally I wanted to do at least t=2, or possibly even t=3, but as I played with the numbers I realized that doing so would force me to push down my other parameters farther than I wanted.)</p>
+
+                </div>
+            </div>
+        </div>        
+
+    </body>
+</html>

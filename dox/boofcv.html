@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>Project 2</title>
+        <!-- Bootstrap core CSS -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/theme.css" rel="stylesheet">
+        <link href="css/bootstrap-reset.css" rel="stylesheet">       
+        <!-- Custom styles for this template -->
+        <link href="css/style.css" rel="stylesheet">
+        <link href="css/style-responsive.css" rel="stylesheet" />          
+    </head>
+
+    <body>
+        <!--header start-->
+        <header class="header-frontend">
+            <div class="navbar navbar-default navbar-fixed-top" style="background-color: #d3e9f7">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="index.html">CSE 5694 - Robotics & AI - <span>Project 2</span></a>
+                    </div>
+                    <div class="navbar-collapse collapse ">
+                        <ul class="nav navbar-nav">
+                            <li><a href="index.html">Home</a></li>
+                            <li class="active"><a href="boofcv.html">BoofCV</a></li>                        
+                            <li><a href="algorithm.html">Algorithm</a></li> 
+                            <li><a href="example.html">Example</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!--header end-->  
+
+        <!--container start-->
+        <div class="container" style="padding-top: 4%">
+            <div class="row">
+                <!--feature start-->
+                <div class="col-sm-5">
+                    <img  src="img/FIT-Logo.jpg">
+                </div>
+                <div class="text-right feature-head col-sm-7">
+                    <h3>Term: Spring 2017<br><br>
+                        Instructor: Marius C. Silaghi <br><br>
+                        Team Members: Roger Ballard, Zubin Kadva, Zongqiao Liu</h3>                    
+                </div>  
+            </div>
+        </div>
+
+        <div class="container" style="padding-bottom: 5%">
+            <div class="row">
+
+                <div class="feature-head "><h1>BoofCV</h1>
+                    <p>
+                        BoofCV is an open source java library for computer vision and robotics applications. Boof CV is organized into several packages including image processing, feature recognition, calibration, I/O and a lot more.  It has many image processing capabilities. We mainly use <b>Image Segmentation</b>.
+                    </p>
+                    <p>
+                        An image is segmented using color information. First the image is converted into HSV color space to add robustness against changes in lighting. Then all pixels that are close enough to the target color with our metric are kept, and the rest are discarded. In order to identify blobs of a single color, a flood fill was performed on the resulting segmented image, converting an image into a list of blob centers and areas. This straightforward method of image processing allowed us to focus on the more interesting aspects of the algorithm.
+                    </p>
+
+                    <br>
+                    <table align="center">
+                        <tr>
+                            <td width="40%" align="center">
+                                <img src="http://boofcv.org/images/thumb/d/d5/Sunflowers.jpg/357px-Sunflowers.jpg">
+                            </td>
+                            <td align="center">
+                                <img src="http://boofcv.org/images/thumb/e/ec/Example_color_segment_yellow.jpg/357px-Example_color_segment_yellow.jpg">
+                            </td> 
+                        </tr>
+                        <tr align="center">
+                            <td style="font-size: 16px"><br>Input image</td>
+                            <td style="font-size: 16px"><br>Segmented image</td>
+                        </tr>                    
+                        <tr>
+                            <td width="40%" align="center">
+                                <br><br><br><br>
+                                <img style="height:75%" src="img/pipe_main.PNG">
+                            </td>
+                            <td align="center">
+                                <br><br><br><br>
+
+                                <img style="height:75%" src="img/pipe_segmented.PNG">
+                            </td> 
+                        </tr>
+                        <tr align="center">
+                            <td style="font-size: 16px"><br>Original object image</td>
+                            <td style="font-size: 16px"><br>Segmented object image</td>
+                        </tr>
+                    </table>
+
+                    <h1>EXAMPLE CONVERT TO HSV</h1>
+                    <pre><code>float[] color = new float[3];
+int rgb = image.getRGB(e.getX(),e.getY());
+ColorHsv.rgbToHsv((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF, color);
+System.out.println("H = " + color[0]+" S = "+color[1]+" V = "+color[2]);</code></pre>
+
+                    <h1>EXAMPLE IMAGE SEGMENTATION</h1>
+                    <pre><code>Planar&lt;GrayF32&gt; input = ConvertBufferedImage.convertFromMulti(image,null,true,GrayF32.class);
+Planar&lt;GrayF32&gt; hsv = input.createSameShape(); 
+ColorHsv.rgbToHsv_F32(input,hsv);
+float maxDist2 = 0.4f*0.4f; 
+GrayF32 H = hsv.getBand(0);
+GrayF32 S = hsv.getBand(1);
+float adjustUnits = (float)(Math.PI/2.0);     
+BufferedImage output = new BufferedImage(input.width,input.height,BufferedImage.TYPE_INT_RGB);
+for( int y = 0; y < hsv.height; y++ ) {
+    for( int x = 0; x < hsv.width; x++ ) {              
+        float dh = UtilAngle.dist(H.unsafe_get(x,y),hue);
+        float ds = (S.unsafe_get(x,y)-saturation)*adjustUnits;         
+        float dist2 = dh*dh + ds*ds;
+        if( dist2 <= maxDist2 ) {
+            output.setRGB(x,y,image.getRGB(x,y));
+        }
+    }
+}</code></pre>
+
+                </div>
+
+            </div>
+        </div>        
+
+    </body>
+</html>

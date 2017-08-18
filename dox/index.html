@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>Project 2</title>
+        <!-- Bootstrap core CSS -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/theme.css" rel="stylesheet">
+        <link href="css/bootstrap-reset.css" rel="stylesheet">
+        <!--external css-->
+        <!-- Custom styles for this template -->
+        <link href="css/style.css" rel="stylesheet">
+        <link href="css/style-responsive.css" rel="stylesheet" />        
+    </head>
+
+    <body>
+        <!--header start-->
+        <header class="header-frontend">
+            <div class="navbar navbar-default navbar-fixed-top" style="background-color: #d3e9f7">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="index.html">CSE 5694 - Robotics & AI - <span>Project 2</span></a>
+                    </div>
+                    <div class="navbar-collapse collapse ">
+                        <ul class="nav navbar-nav">
+                            <li class="active"><a href="index.html">Home</a></li>
+                            <li><a href="boofcv.html">BoofCV</a></li>                        
+                            <li><a href="algorithm.html">Algorithm</a></li>
+                            <li><a href="example.html">Example</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!--header end-->  
+
+        <!--container start-->
+        <div class="container" style="padding-top: 4%">
+            <div class="row">
+                <!--feature start-->
+                <div class="col-sm-5">
+                    <img src="img/FIT-Logo.jpg">
+                </div>
+                <div class="text-right feature-head col-sm-7">
+                    <h3>Term: Spring 2017<br><br>
+                        Instructor: Marius C. Silaghi <br><br>
+                        Team Members: Roger Ballard, Zubin Kadva, Zongqiao Liu</h3>                    
+                </div>  
+            </div>
+        </div>
+
+        <div class="container" style="padding-bottom: 5%">
+            <div class="row">     
+                <div class="feature-head"><h1>Problem Description</h1>
+                    <p>
+                        For this project, the position of the object is not known in advance. The goal is to program the robotic arm to take a sequence of pictures from different directions in order to find the exact position of the object. We have to develop a contingency plan of the arm trajectory and can process the images with any package available (e.g. opencv). The last computation has to be made/verified with images taken from the lowest possible position of the camera above the object. 
+                    </p>
+
+                    <h1>Approach</h1>               
+                    <p>
+                        To locate the object, some image processing is required. We used <a href="http://boofcv.org">BoofCV</a> for HSV color segmentation.
+                    </p>   
+                    <p>
+                        It is also necessary to plan the robotic arm to enable inspection of the entire table surface to search for the object. Rather than using a predetermined search pattern, we created a general algorithm that determines what position to take each image from, given the current belief state. This algorithm is described in more detail on the Algorithm page.
+                    </p>
+
+                    <h1>The Object</h1>               
+                    <p>
+                        For our project, we were asked to locate a pipe. The pipe is green with pink corners and center. An image of this pipe is as shown below:
+                    </p>  
+                    <br>
+                    <img style="margin: 0 auto; display: block" src="img/pipe.png"> 
+                    <p style="text-align: center; padding-top: 1%">The object</p>
+
+                    <h1><a href="src.zip">Source Code</a></h1>
+                    <p>This code has been written using the Java programming language.</p>                                
+                    <p>The source code for this project is available <a href="src.zip">here</a>.</p>
+
+
+                    <h1>Results</h1>      
+                    <p>
+                        The algorithm typically locates the first point in 1-3 images, and finds its exact position in another 1-2 images. It then finds the second point in 1-2 images, and narrows its position down in 1-2 images. It finds then third point in 1-2 images, and narrows its position down in 1-2 images. Not including verification images, the algorithm typically fully determines the object's position and orientation in 7-10 images. (And finds the exact position of the first point in 3-5 images.)
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+    </body>
+</html>
